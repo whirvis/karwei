@@ -77,6 +77,18 @@ public fun <R> Task.runBlocking(
 )
 
 /**
+ * Runs a coroutine task via [runBlocking].
+ */
+context(taskScope: LiveTaskContextScope)
+public fun <R> TaskRunnable<R>.runBlocking(
+    context: CoroutineContext = EmptyCoroutineContext,
+): R = taskScope.runBlockingTask(
+    task = task,
+    context = context,
+    block = block,
+)
+
+/**
  * Creates a coroutine task via [CoroutineScope.launch].
  *
  * @param task The task to run the coroutine as.
@@ -130,6 +142,18 @@ public fun Task.launch(
 )
 
 /**
+ * Creates a coroutine task via [CoroutineScope.launch].
+ */
+context(_: LiveTaskContextScope, coroutineScope: CoroutineScope)
+public fun TaskRunnable<Unit>.launch(
+    context: CoroutineContext = EmptyCoroutineContext,
+): Job = coroutineScope.launchTask(
+    task = task,
+    context = context,
+    block = block,
+)
+
+/**
  * Creates a coroutine task via [CoroutineScope.async].
  *
  * @param task The task to run the coroutine as.
@@ -178,6 +202,18 @@ public fun <R> Task.async(
     block: suspend LiveTaskContextScope.() -> R,
 ): Job = coroutineScope.asyncTask(
     task = this,
+    context = context,
+    block = block,
+)
+
+/**
+ * Creates a coroutine task via [CoroutineScope.async].
+ */
+context(_: LiveTaskContextScope, coroutineScope: CoroutineScope)
+public fun <R> TaskRunnable<R>.async(
+    context: CoroutineContext = EmptyCoroutineContext,
+): Job = coroutineScope.asyncTask(
+    task = task,
     context = context,
     block = block,
 )
