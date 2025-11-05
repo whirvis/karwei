@@ -38,7 +38,8 @@ public class TaskFlowResult<R : Any> {
 
     private val lock = ReentrantReadWriteLock()
 
-    private var computedResult = false
+    internal var computedResult = false
+        private set
 
     internal var value: R? = null
         get() = lock.read {
@@ -50,7 +51,7 @@ public class TaskFlowResult<R : Any> {
         }
         set(value) = lock.write {
             if (computedResult) {
-                val message = "No result computed for task"
+                val message = "Result already computed for task"
                 throw NoSuchElementException(message)
             }
             this.computedResult = true
@@ -98,12 +99,17 @@ private fun <S : Any, R : S> TaskRunnable<R>.processEvent(
  * @param result Where to write the result to.
  * @param concurrentTaskBehavior What should occur when a sibling task
  * starts before the other is finished.
+ * @throws IllegalArgumentException If [result] already has a value.
  */
 public fun <S : Any, R : S> TaskRunnable<R>.taskFlow(
     result: TaskFlowResult<S>?,
     concurrentTaskBehavior: ConcurrentTaskBehavior =
         ConcurrentTaskBehavior.IGNORE,
 ): Flow<TaskEvent> {
+    if (result?.computedResult == true) {
+        val message = "Result already has a value"
+        throw IllegalArgumentException(message)
+    }
     val flow = baseTaskFlow(concurrentTaskBehavior)
     return if (result == null) flow
     else flow.onEach { processEvent(it, result) }
