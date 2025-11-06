@@ -34,6 +34,76 @@ import kotlin.coroutines.EmptyCoroutineContext
  * @param task The task to run the coroutine as.
  * @param block The coroutine code.
  */
+public fun <R> runBlockingTask(
+    task: Task,
+    concurrentTaskBehavior: ConcurrentTaskBehavior =
+        ConcurrentTaskBehavior.IGNORE,
+    context: CoroutineContext = EmptyCoroutineContext,
+    block: suspend LiveTaskContextScope.() -> R,
+): R = runBlocking(context) {
+    LiveTaskContext().enter(
+        events = null,
+        concurrentTaskBehavior = concurrentTaskBehavior,
+        runnable = task.runnable(block),
+    )
+}
+
+/**
+ * Runs a coroutine task via [runBlocking].
+ *
+ * @param task The name of the task to run the coroutine as.
+ * @param block The coroutine code.
+ */
+public fun <R> runBlockingTask(
+    name: String,
+    concurrentTaskBehavior: ConcurrentTaskBehavior =
+        ConcurrentTaskBehavior.IGNORE,
+    context: CoroutineContext = EmptyCoroutineContext,
+    block: suspend LiveTaskContextScope.() -> R,
+): R = runBlockingTask(
+    task = NamedTask(name),
+    concurrentTaskBehavior = concurrentTaskBehavior,
+    context = context,
+    block = block,
+)
+
+/**
+ * Runs a coroutine task via [runBlocking].
+ *
+ * @param block The coroutine code.
+ */
+public fun <R> Task.runBlocking(
+    concurrentTaskBehavior: ConcurrentTaskBehavior =
+        ConcurrentTaskBehavior.IGNORE,
+    context: CoroutineContext = EmptyCoroutineContext,
+    block: suspend LiveTaskContextScope.() -> R,
+): R = runBlockingTask(
+    task = this,
+    concurrentTaskBehavior = concurrentTaskBehavior,
+    context = context,
+    block = block,
+)
+
+/**
+ * Runs a coroutine task via [runBlocking].
+ */
+public fun <R> TaskRunnable<R>.runBlocking(
+    concurrentTaskBehavior: ConcurrentTaskBehavior =
+        ConcurrentTaskBehavior.IGNORE,
+    context: CoroutineContext = EmptyCoroutineContext,
+): R = runBlockingTask(
+    task = task,
+    concurrentTaskBehavior = concurrentTaskBehavior,
+    context = context,
+    block = block,
+)
+
+/**
+ * Runs a coroutine task via [runBlocking].
+ *
+ * @param task The task to run the coroutine as.
+ * @param block The coroutine code.
+ */
 public fun <R> LiveTaskContextScope.runBlockingTask(
     task: Task,
     context: CoroutineContext = EmptyCoroutineContext,
