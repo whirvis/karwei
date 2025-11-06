@@ -59,7 +59,7 @@ public fun task(name: String): Task = NamedTask(name)
  * @property block The code to execute.
  */
 @ConsistentCopyVisibility
-public data class TaskRunnable<R>
+public data class TaskRunnable<out R>
 internal constructor(
     public val task: Task,
     public val block: suspend LiveTaskContextScope.() -> R,
