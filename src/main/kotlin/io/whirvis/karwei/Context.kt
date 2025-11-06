@@ -230,8 +230,8 @@ internal constructor() : TaskContext {
     private var _failureCause: Throwable? = null
     private val _children = mutableListOf<LiveTaskContext>()
 
-    internal val events: ProducerScope<TaskEvent>
-        get() = this._events!!
+    internal val events: ProducerScope<TaskEvent>?
+        get() = this._events
 
     internal val concurrentTaskBehavior: ConcurrentTaskBehavior
         get() = this._concurrentTaskBehavior!!
@@ -269,7 +269,7 @@ internal constructor() : TaskContext {
 
     private suspend fun TaskEvent.emit() {
         yield() /* give collectors time to process */
-        events.send(element = this@emit)
+        events?.send(element = this@emit)
         yield() /* give collectors time to process */
     }
 
@@ -372,7 +372,7 @@ internal constructor() : TaskContext {
 
     private suspend fun <R> enter(
         parent: LiveTaskContext?,
-        events: ProducerScope<TaskEvent>,
+        events: ProducerScope<TaskEvent>?,
         concurrentTaskBehavior: ConcurrentTaskBehavior,
         runnable: TaskRunnable<R>,
     ): R {
@@ -391,7 +391,7 @@ internal constructor() : TaskContext {
     }
 
     internal suspend fun <R> enter(
-        events: ProducerScope<TaskEvent>,
+        events: ProducerScope<TaskEvent>?,
         concurrentTaskBehavior: ConcurrentTaskBehavior,
         runnable: TaskRunnable<R>,
     ): R = enter(
