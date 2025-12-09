@@ -63,6 +63,13 @@ public class TaskFlowResult<R : Any> {
      *
      * @throws NoSuchElementException If the result has not been computed.
      */
+    public fun get(): R = this.value!!
+
+    /**
+     * Returns the computed value.
+     *
+     * @throws NoSuchElementException If the result has not been computed.
+     */
     public operator fun getValue(
         thisRef: Any?, property: KProperty<*>,
     ): R = this.value!!
