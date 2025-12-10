@@ -159,6 +159,11 @@ public interface TaskContext {
      */
     public val children: List<TaskContext>
 
+    /**
+     * The logger for this task.
+     */
+    public val logger: TaskLogger
+
 }
 
 private fun List<LiveTaskContext>.toStatic() =
@@ -183,7 +188,7 @@ private constructor(
 ) : TaskContext {
 
     /*
-     * This is set by parent contexts *after* construction.
+     * This is set by parent contexts *after* initial construction.
      *
      * Doing it at construction would result in a stack overflow
      * (the parent calls on the child to convert to a static context,
@@ -192,8 +197,13 @@ private constructor(
      */
     private var _parent: StaticTaskContext? = null
 
+    private var _logger: StaticTaskLogger? = null
+
     override val parent: StaticTaskContext?
         get() = _parent
+
+    override val logger: StaticTaskLogger
+        get() = _logger!!
 
     internal constructor(
         context: LiveTaskContext,
@@ -207,6 +217,7 @@ private constructor(
         children = context.children.toStatic(),
     ) {
         children.forEach { it._parent = this }
+        this._logger = StaticTaskLogger(context = this)
     }
 
 }
@@ -229,6 +240,7 @@ internal constructor() : TaskContext {
     private var _isCompleted: Boolean = false
     private var _failureCause: Throwable? = null
     private val _children = mutableListOf<LiveTaskContext>()
+    private val _logger = LiveTaskLogger(this)
 
     internal val events: ProducerScope<TaskEvent>?
         get() = this._events
@@ -238,12 +250,12 @@ internal constructor() : TaskContext {
 
     override val task: Task
         get() {
-            val backingField = _task
-            if (backingField == null) {
+            val field = _task
+            if (field == null) {
                 val message = "No task currently running"
                 throw IllegalStateException(message)
             }
-            return backingField
+            return field
         }
 
     override val parent: LiveTaskContext?
@@ -267,10 +279,29 @@ internal constructor() : TaskContext {
     override val children: List<LiveTaskContext>
         get() = this._children.toList()
 
+    override val logger: LiveTaskLogger
+        get() = this._logger
+
     private suspend fun TaskEvent.emit() {
         yield() /* give collectors time to process */
         events?.send(element = this@emit)
         yield() /* give collectors time to process */
+    }
+
+    internal suspend fun emitLog(
+        level: TaskLogLevel,
+        message: () -> Any,
+    ) {
+        contextLock.lock()
+        try {
+            if (_task == null) {
+                val message = "Scope has already been exited"
+                throw IllegalStateException(message)
+            }
+            TaskLogEvent(task, this, level, message).emit()
+        } finally {
+            contextLock.unlock()
+        }
     }
 
     private fun setEnteredFlag() {
@@ -424,6 +455,12 @@ public interface TaskContextScope {
      * The context of this scope.
      */
     public val taskContext: TaskContext
+
+    /**
+     * Shorthand for `taskContext.logger`.
+     */
+    public val taskLogger: TaskLogger
+        get() = taskContext.logger
 
 }
 

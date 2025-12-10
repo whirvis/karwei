@@ -63,6 +63,22 @@ internal constructor(
 ) : TaskEvent(task, context)
 
 /**
+ * A task has logged a message.
+ *
+ * @param task The task that logged the message.
+ * @param context The context the event occurred in.
+ * @param level The log message level.
+ * @param message The log message.
+ */
+public class TaskLogEvent
+internal constructor(
+    task: Task,
+    context: LiveTaskContext,
+    public val level: TaskLogLevel,
+    public val message: () -> Any,
+) : TaskEvent(task, context)
+
+/**
  * A task has successfully finished execution.
  *
  * @param task The task that has finished.
