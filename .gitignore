@@ -5,7 +5,13 @@ build/
 !**/src/test/**/build/
 
 ### IntelliJ IDEA ###
+.idea/dbnavigator.xml
+.idea/GitLink.xml
+.idea/gradle.xml
+.idea/kotlinc.xml
+.idea/misc.xml
 .idea/modules.xml
+.idea/vcs.xml
 .idea/jarRepositories.xml
 .idea/compiler.xml
 .idea/libraries/
