@@ -34,7 +34,7 @@ import kotlin.reflect.KProperty
 /**
  * Used to store the results from [taskFlow].
  */
-public class TaskFlowResult<R : Any> {
+public class TaskFlowResult<R : Any?> {
 
     private val lock = ReentrantReadWriteLock()
 
@@ -87,7 +87,7 @@ private fun <R> TaskRunnable<R>.baseTaskFlow(
 }
 
 @Suppress("UNCHECKED_CAST")
-private fun <S : Any, R : S> TaskRunnable<R>.processEvent(
+private fun <S : Any?, R : S> TaskRunnable<R>.processEvent(
     it: TaskEvent, result: TaskFlowResult<S>,
 ) {
     if (it.task == task && it is TaskFinishEvent) {
@@ -108,7 +108,7 @@ private fun <S : Any, R : S> TaskRunnable<R>.processEvent(
  * starts before the other is finished.
  * @throws IllegalArgumentException If [result] already has a value.
  */
-public fun <S : Any, R : S> TaskRunnable<R>.taskFlow(
+public fun <S : Any?, R : S> TaskRunnable<R>.taskFlow(
     result: TaskFlowResult<S>?,
     concurrentTaskBehavior: ConcurrentTaskBehavior =
         ConcurrentTaskBehavior.IGNORE,
