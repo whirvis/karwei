@@ -1,7 +1,7 @@
 plugins {
-    `java-library`
     kotlin("jvm") version "2.2.20"
     id("org.jetbrains.dokka") version "2.1.0-Beta"
+    `java-library`
 }
 
 group = "io.whirvis"
