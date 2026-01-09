@@ -1,7 +1,7 @@
 /*
  * the MIT License (MIT)
  *
- * Copyright (c) 2025 "Whirvis" Trent Summerlin
+ * Copyright (c) 2025-2026 Whirvex Software, LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package io.whirvis.karwei
+package io.whirvex.karwei
 
-internal class JobTest {
+internal class FlowTest {
     /* TODO: unit tests */
 }
