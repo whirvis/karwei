@@ -4,7 +4,7 @@ import io.whirvex.gradle.whirvexNexusSnapshot
 
 plugins {
     kotlin("jvm") version "2.3.0"
-    id("org.jetbrains.dokka") version "2.1.0-Beta"
+    id("org.jetbrains.dokka") version "2.1.0"
     `java-library`
     `maven-publish`
 }
