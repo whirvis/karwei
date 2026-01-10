@@ -3,7 +3,7 @@ import io.whirvex.gradle.whirvexNexusRelease
 import io.whirvex.gradle.whirvexNexusSnapshot
 
 plugins {
-    kotlin("jvm") version "2.2.20"
+    kotlin("jvm") version "2.3.0"
     id("org.jetbrains.dokka") version "2.1.0-Beta"
     `java-library`
     `maven-publish`
@@ -13,7 +13,7 @@ group = "io.whirvex"
 version = "1.0.0-ALPHA"
 
 kotlin {
-    jvmToolchain(jdkVersion = 8)
+    jvmToolchain(jdkVersion = 21)
     explicitApi()
     compilerOptions.freeCompilerArgs.add("-Xcontext-parameters")
 }
