@@ -41,7 +41,7 @@ public class TaskFlowResult<R : Any?> {
     internal var computedResult = false
         private set
 
-    internal var value: R? = null
+    internal var value: Any? = null
         get() = lock.read {
             if (!computedResult) {
                 val message = "No result computed for task"
@@ -63,7 +63,8 @@ public class TaskFlowResult<R : Any?> {
      *
      * @throws NoSuchElementException If the result has not been computed.
      */
-    public fun get(): R = this.value!!
+    @Suppress("UNCHECKED_CAST")
+    public fun get(): R = this.value as R
 
     /**
      * Returns the computed value.
@@ -72,7 +73,7 @@ public class TaskFlowResult<R : Any?> {
      */
     public operator fun getValue(
         thisRef: Any?, property: KProperty<*>,
-    ): R = this.value!!
+    ): R = this.get()
 
 }
 
