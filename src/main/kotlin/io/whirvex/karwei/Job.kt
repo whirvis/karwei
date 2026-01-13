@@ -192,16 +192,20 @@ public fun <R> TaskRunnable<R>.runBlocking(
  * @param block The coroutine code.
  */
 context(taskScope: LiveTaskContextScope)
-public fun CoroutineScope.launchTask(
+public suspend fun CoroutineScope.launchTask(
     task: Task = JobTask.Launch,
     context: CoroutineContext = EmptyCoroutineContext,
     start: CoroutineStart = CoroutineStart.DEFAULT,
     block: TaskRunnableBlock<Unit>,
-): Job = launch(context, start) {
-    LiveTaskContext().enter(
-        parent = taskScope.taskContext,
-        runnable = task.runnable(block),
-    )
+): Job {
+    val job = launch(context, start) {
+        LiveTaskContext().enter(
+            parent = taskScope.taskContext,
+            runnable = task.runnable(block),
+        )
+    }
+    yield() /* give parent time to process */
+    return job
 }
 
 /**
@@ -211,7 +215,7 @@ public fun CoroutineScope.launchTask(
  * @param block The coroutine code.
  */
 context(taskScope: LiveTaskContextScope)
-public fun CoroutineScope.launchTask(
+public suspend fun CoroutineScope.launchTask(
     name: String,
     context: CoroutineContext = EmptyCoroutineContext,
     start: CoroutineStart = CoroutineStart.DEFAULT,
@@ -229,7 +233,7 @@ public fun CoroutineScope.launchTask(
  * @param block The coroutine code.
  */
 context(_: LiveTaskContextScope, coroutineScope: CoroutineScope)
-public fun Task.launch(
+public suspend fun Task.launch(
     context: CoroutineContext = EmptyCoroutineContext,
     block: TaskRunnableBlock<Unit>,
 ): Job = coroutineScope.launchTask(
@@ -242,7 +246,7 @@ public fun Task.launch(
  * Creates a coroutine task via [CoroutineScope.launch].
  */
 context(_: LiveTaskContextScope, coroutineScope: CoroutineScope)
-public fun TaskRunnable<Unit>.launch(
+public suspend fun TaskRunnable<Unit>.launch(
     context: CoroutineContext = EmptyCoroutineContext,
 ): Job = coroutineScope.launchTask(
     task = task,
@@ -257,16 +261,20 @@ public fun TaskRunnable<Unit>.launch(
  * @param block The coroutine code.
  */
 context(taskScope: LiveTaskContextScope)
-public fun <R> CoroutineScope.asyncTask(
+public suspend fun <R> CoroutineScope.asyncTask(
     task: Task = JobTask.Async,
     context: CoroutineContext = EmptyCoroutineContext,
     start: CoroutineStart = CoroutineStart.DEFAULT,
     block: TaskRunnableBlock<R>,
-): Deferred<R> = async(context, start) {
-    LiveTaskContext().enter(
-        parent = taskScope.taskContext,
-        runnable = task.runnable(block),
-    )
+): Deferred<R> {
+    val deferred = async(context, start) {
+        LiveTaskContext().enter(
+            parent = taskScope.taskContext,
+            runnable = task.runnable(block),
+        )
+    }
+    yield() /* give parent time to process */
+    return deferred
 }
 
 /**
@@ -276,7 +284,7 @@ public fun <R> CoroutineScope.asyncTask(
  * @param block The coroutine code.
  */
 context(taskScope: LiveTaskContextScope)
-public fun <R> CoroutineScope.asyncTask(
+public suspend fun <R> CoroutineScope.asyncTask(
     name: String,
     context: CoroutineContext = EmptyCoroutineContext,
     start: CoroutineStart = CoroutineStart.DEFAULT,
@@ -294,7 +302,7 @@ public fun <R> CoroutineScope.asyncTask(
  * @param block The coroutine code.
  */
 context(_: LiveTaskContextScope, coroutineScope: CoroutineScope)
-public fun <R> Task.async(
+public suspend fun <R> Task.async(
     context: CoroutineContext = EmptyCoroutineContext,
     block: TaskRunnableBlock<R>,
 ): Deferred<R> = coroutineScope.asyncTask(
@@ -307,7 +315,7 @@ public fun <R> Task.async(
  * Creates a coroutine task via [CoroutineScope.async].
  */
 context(_: LiveTaskContextScope, coroutineScope: CoroutineScope)
-public fun <R> TaskRunnable<R>.async(
+public suspend fun <R> TaskRunnable<R>.async(
     context: CoroutineContext = EmptyCoroutineContext,
 ): Deferred<R> = coroutineScope.asyncTask(
     task = task,
