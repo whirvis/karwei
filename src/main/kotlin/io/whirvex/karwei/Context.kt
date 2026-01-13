@@ -322,7 +322,7 @@ internal constructor() : TaskContext {
         }
 
         suspend fun await() {
-            while (this.isActive) {
+            while (firstborn.isActive) {
                 yield()
             }
         }
