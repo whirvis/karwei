@@ -34,24 +34,24 @@ import kotlin.coroutines.EmptyCoroutineContext
  * Use this when you don't want to specify anything about the task
  * other than the fact it's a job from [kotlinx.coroutines].
  */
-public sealed class JobTask: Task {
+public sealed class JobTask : Task {
 
     override val name: String = javaClass.simpleName
 
     /**
      * A task job that's been started via [runBlocking].
      */
-    public object RunBlocking: JobTask()
+    public object RunBlocking : JobTask()
 
     /**
      * A task job that's been started via [launch].
      */
-    public object Launch: JobTask()
+    public object Launch : JobTask()
 
     /**
      * A task job that's been started via [async].
      */
-    public object Async: JobTask()
+    public object Async : JobTask()
 
 }
 
