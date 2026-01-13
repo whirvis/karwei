@@ -410,11 +410,12 @@ internal constructor() : TaskContext {
     ): R {
         contextLock.lock()
         try {
+            this.setEnteredFlag()
+
             this._parent = parent
             this._events = events
             this._concurrentTaskBehavior = concurrentTaskBehavior
 
-            this.setEnteredFlag()
             this.enforceConcurrentBehavior()
             return this.start(runnable)
         } finally {
