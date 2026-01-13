@@ -77,7 +77,7 @@ public fun <R> runBlockingTask(
 /**
  * Runs a coroutine task via [runBlocking].
  *
- * @param task The name of the task to run the coroutine as.
+ * @param name The name of the task to run the coroutine as.
  * @param block The coroutine code.
  */
 public fun <R> runBlockingTask(
@@ -141,7 +141,7 @@ public fun <R> LiveTaskContextScope.runBlockingTask(
 /**
  * Runs a coroutine task via [runBlocking].
  *
- * @param task The name of the task to run the coroutine as.
+ * @param name The name of the task to run the coroutine as.
  * @param block The coroutine code.
  */
 public fun <R> LiveTaskContextScope.runBlockingTask(
@@ -207,7 +207,7 @@ public suspend fun CoroutineScope.launchTask(
 /**
  * Creates a coroutine task via [CoroutineScope.launch].
  *
- * @param task The name of the task to run the coroutine as.
+ * @param name The name of the task to run the coroutine as.
  * @param block The coroutine code.
  */
 context(taskScope: LiveTaskContextScope)
@@ -276,7 +276,7 @@ public suspend fun <R> CoroutineScope.asyncTask(
 /**
  * Creates a coroutine task via [CoroutineScope.async].
  *
- * @param task The name of the task to run the coroutine as.
+ * @param name The name of the task to run the coroutine as.
  * @param block The coroutine code.
  */
 context(taskScope: LiveTaskContextScope)
