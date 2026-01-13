@@ -29,36 +29,6 @@ import kotlinx.coroutines.yield
 import java.util.concurrent.locks.ReentrantLock
 
 /**
- * Describes what should occur when a task on the same level
- * as another (i.e., a sibling rather than a child) starts before
- * the other is finished.
- */
-public enum class ConcurrentTaskBehavior {
-
-    /**
-     * Do nothing and run the tasks as normal.
-     *
-     * This is the default behavior.
-     */
-    IGNORE,
-
-    /**
-     * Wait for the previous task to finish.
-     *
-     * Be aware this may slow down execution.
-     */
-    AWAIT,
-
-    /**
-     * Halt execution and throw an exception.
-     *
-     * @see ConcurrentTaskException
-     */
-    ERROR,
-
-}
-
-/**
  * Signals that a task has started before a sibling task could finish
  * in an environment that does not allow it.
  *
@@ -233,7 +203,7 @@ internal constructor() : TaskContext {
     private var contextEntered = false
 
     private var _events: ProducerScope<TaskEvent>? = null
-    private var _concurrentTaskBehavior: ConcurrentTaskBehavior? = null
+    private var _allowConcurrentTasks: Boolean? = null
 
     private var _task: Task? = null
     private var _parent: LiveTaskContext? = null
@@ -246,8 +216,8 @@ internal constructor() : TaskContext {
     internal val events: ProducerScope<TaskEvent>?
         get() = this._events
 
-    internal val concurrentTaskBehavior: ConcurrentTaskBehavior
-        get() = this._concurrentTaskBehavior!!
+    internal val allowConcurrentTasks: Boolean
+        get() = this._allowConcurrentTasks!!
 
     override val task: Task
         get() {
@@ -313,30 +283,15 @@ internal constructor() : TaskContext {
         this.contextEntered = true
     }
 
-    private suspend fun enforceConcurrentBehavior() {
+    private fun enforceConcurrentBehavior() {
+        if (allowConcurrentTasks) {
+            return /* nothing to check for */
+        }
         val firstborn = parent?._children?.firstOrNull()
-            ?: return /* nothing to check */
-
-        fun ignore() {
-            /* nothing to do */
-        }
-
-        suspend fun await() {
-            while (firstborn.isActive) {
-                yield()
-            }
-        }
-
-        fun error() {
+        if (firstborn != null) {
             val name = firstborn.task.name
             val message = "Sibling task \"$name\" still running"
             throw ConcurrentTaskException(task, message)
-        }
-
-        when (concurrentTaskBehavior) {
-            ConcurrentTaskBehavior.IGNORE -> ignore()
-            ConcurrentTaskBehavior.AWAIT -> await()
-            ConcurrentTaskBehavior.ERROR -> error()
         }
     }
 
@@ -402,7 +357,7 @@ internal constructor() : TaskContext {
     private suspend fun <R> enter(
         parent: LiveTaskContext?,
         events: ProducerScope<TaskEvent>?,
-        concurrentTaskBehavior: ConcurrentTaskBehavior,
+        allowConcurrentTasks: Boolean,
         runnable: TaskRunnable<R>,
     ): R {
         contextLock.lock()
@@ -412,7 +367,7 @@ internal constructor() : TaskContext {
             this._task = runnable.task
             this._parent = parent
             this._events = events
-            this._concurrentTaskBehavior = concurrentTaskBehavior
+            this._allowConcurrentTasks = allowConcurrentTasks
 
             this.enforceConcurrentBehavior()
             return this.start(runnable)
@@ -423,12 +378,12 @@ internal constructor() : TaskContext {
 
     internal suspend fun <R> enter(
         events: ProducerScope<TaskEvent>?,
-        concurrentTaskBehavior: ConcurrentTaskBehavior,
+        allowConcurrentTasks: Boolean,
         runnable: TaskRunnable<R>,
     ): R = enter(
         parent = null,
         events = events,
-        concurrentTaskBehavior = concurrentTaskBehavior,
+        allowConcurrentTasks = allowConcurrentTasks,
         runnable = runnable,
     )
 
@@ -438,7 +393,7 @@ internal constructor() : TaskContext {
     ): R = enter(
         parent = parent,
         events = parent.events,
-        concurrentTaskBehavior = parent.concurrentTaskBehavior,
+        allowConcurrentTasks = parent.allowConcurrentTasks,
         runnable = runnable,
     )
 

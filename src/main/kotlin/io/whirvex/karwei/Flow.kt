@@ -78,11 +78,11 @@ public class TaskFlowResult<R : Any?> {
 }
 
 private fun <R> TaskRunnable<R>.baseTaskFlow(
-    concurrentTaskBehavior: ConcurrentTaskBehavior,
+    allowConcurrentTasks: Boolean,
 ): Flow<TaskEvent> = channelFlow {
     LiveTaskContext().enter(
         events = this@channelFlow,
-        concurrentTaskBehavior = concurrentTaskBehavior,
+        allowConcurrentTasks = allowConcurrentTasks,
         runnable = this@baseTaskFlow,
     )
 }
@@ -105,20 +105,20 @@ private fun <S : Any?, R : S> TaskRunnable<R>.processEvent(
  * in [result] will be overwritten on subsequent invocations.
  *
  * @param result Where to write the result to.
- * @param concurrentTaskBehavior What should occur when a sibling task
- * starts before the other is finished.
+ * @param allowConcurrentTasks Whether multiple sibling tasks can execute
+ * at the same time. If not, an exception will be thrown if another task is
+ * started while a sibling is still running.
  * @throws IllegalArgumentException If [result] already has a value.
  */
 public fun <S : Any?, R : S> TaskRunnable<R>.taskFlow(
     result: TaskFlowResult<S>?,
-    concurrentTaskBehavior: ConcurrentTaskBehavior =
-        ConcurrentTaskBehavior.IGNORE,
+    allowConcurrentTasks: Boolean = true,
 ): Flow<TaskEvent> {
     if (result?.computedResult == true) {
         val message = "Result already has a value"
         throw IllegalArgumentException(message)
     }
-    val flow = baseTaskFlow(concurrentTaskBehavior)
+    val flow = baseTaskFlow(allowConcurrentTasks)
     return if (result == null) flow
     else flow.onEach { processEvent(it, result) }
 }
@@ -130,10 +130,10 @@ public fun <S : Any?, R : S> TaskRunnable<R>.taskFlow(
  * Like other cold flows, the runnable is called every time a terminal
  * operator is applied to the resulting flow.
  *
- * @param concurrentTaskBehavior What should occur when a sibling task
- * starts before the other is finished.
+ * @param allowConcurrentTasks Whether multiple sibling tasks can execute
+ * at the same time. If not, an exception will be thrown if another task is
+ * started while a sibling is still running.
  */
 public fun TaskRunnable<Unit>.taskFlow(
-    concurrentTaskBehavior: ConcurrentTaskBehavior =
-        ConcurrentTaskBehavior.IGNORE,
-): Flow<TaskEvent> = baseTaskFlow(concurrentTaskBehavior)
+    allowConcurrentTasks: Boolean = true,
+): Flow<TaskEvent> = baseTaskFlow(allowConcurrentTasks)

@@ -63,14 +63,13 @@ public sealed class JobTask : Task {
  */
 public fun <R> runBlockingTask(
     task: Task = JobTask.RunBlocking,
-    concurrentTaskBehavior: ConcurrentTaskBehavior =
-        ConcurrentTaskBehavior.IGNORE,
+    allowConcurrentTasks: Boolean = true,
     context: CoroutineContext = EmptyCoroutineContext,
     block: TaskRunnableBlock<R>,
 ): R = runBlocking(context) {
     LiveTaskContext().enter(
         events = null,
-        concurrentTaskBehavior = concurrentTaskBehavior,
+        allowConcurrentTasks = allowConcurrentTasks,
         runnable = task.runnable(block),
     )
 }
@@ -83,13 +82,12 @@ public fun <R> runBlockingTask(
  */
 public fun <R> runBlockingTask(
     name: String,
-    concurrentTaskBehavior: ConcurrentTaskBehavior =
-        ConcurrentTaskBehavior.IGNORE,
+    allowConcurrentTasks: Boolean = true,
     context: CoroutineContext = EmptyCoroutineContext,
     block: TaskRunnableBlock<R>,
 ): R = runBlockingTask(
     task = NamedTask(name),
-    concurrentTaskBehavior = concurrentTaskBehavior,
+    allowConcurrentTasks = allowConcurrentTasks,
     context = context,
     block = block,
 )
@@ -100,13 +98,12 @@ public fun <R> runBlockingTask(
  * @param block The coroutine code.
  */
 public fun <R> Task.runBlocking(
-    concurrentTaskBehavior: ConcurrentTaskBehavior =
-        ConcurrentTaskBehavior.IGNORE,
+    allowConcurrentTasks: Boolean = true,
     context: CoroutineContext = EmptyCoroutineContext,
     block: TaskRunnableBlock<R>,
 ): R = runBlockingTask(
     task = this,
-    concurrentTaskBehavior = concurrentTaskBehavior,
+    allowConcurrentTasks = allowConcurrentTasks,
     context = context,
     block = block,
 )
@@ -115,12 +112,11 @@ public fun <R> Task.runBlocking(
  * Runs a coroutine task via [runBlocking].
  */
 public fun <R> TaskRunnable<R>.runBlocking(
-    concurrentTaskBehavior: ConcurrentTaskBehavior =
-        ConcurrentTaskBehavior.IGNORE,
+    allowConcurrentTasks: Boolean = true,
     context: CoroutineContext = EmptyCoroutineContext,
 ): R = runBlockingTask(
     task = task,
-    concurrentTaskBehavior = concurrentTaskBehavior,
+    allowConcurrentTasks = allowConcurrentTasks,
     context = context,
     block = block,
 )
