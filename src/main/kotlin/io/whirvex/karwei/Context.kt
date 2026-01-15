@@ -26,13 +26,16 @@ package io.whirvex.karwei
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.yield
+import org.jetbrains.annotations.VisibleForTesting
 import java.util.concurrent.locks.ReentrantLock
 
 /**
- * Signals that a task has started before a sibling task could finish
- * in an environment that does not allow it.
+ * Signals that a task concurrency error has occurred.
  *
- * @param task The task that started prematurely.
+ * The most common concurrency error is a parent task finishing before
+ * all of its children are finished.
+ *
+ * @param task The task that caused the exception.
  */
 public class ConcurrentTaskException(
     task: Task,
