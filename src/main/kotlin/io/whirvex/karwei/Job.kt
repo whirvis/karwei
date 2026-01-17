@@ -127,13 +127,14 @@ public fun <R> TaskRunnable<R>.runBlocking(
  * @param task The task to run the coroutine as.
  * @param block The coroutine code.
  */
-public fun <R> LiveTaskContextScope.runBlockingTask(
+context(taskScope: LiveTaskContextScope)
+public fun <R> runBlockingTask(
     task: Task = JobTask.RunBlocking,
     context: CoroutineContext = EmptyCoroutineContext,
     block: TaskRunnableBlock<R>,
 ): R = runBlocking(context) {
     LiveTaskContext().enter(
-        parent = this@runBlockingTask.taskContext,
+        parent = taskScope.taskContext,
         runnable = task.runnable(block),
     )
 }
@@ -144,7 +145,8 @@ public fun <R> LiveTaskContextScope.runBlockingTask(
  * @param name The name of the task to run the coroutine as.
  * @param block The coroutine code.
  */
-public fun <R> LiveTaskContextScope.runBlockingTask(
+context(_: LiveTaskContextScope)
+public fun <R> runBlockingTask(
     name: String,
     context: CoroutineContext = EmptyCoroutineContext,
     block: TaskRunnableBlock<R>,
@@ -159,11 +161,11 @@ public fun <R> LiveTaskContextScope.runBlockingTask(
  *
  * @param block The coroutine code.
  */
-context(taskScope: LiveTaskContextScope)
+context(_: LiveTaskContextScope)
 public fun <R> Task.runBlocking(
     context: CoroutineContext = EmptyCoroutineContext,
     block: TaskRunnableBlock<R>,
-): R = taskScope.runBlockingTask(
+): R = runBlockingTask(
     task = this,
     context = context,
     block = block,
@@ -172,10 +174,10 @@ public fun <R> Task.runBlocking(
 /**
  * Runs a coroutine task via [runBlocking].
  */
-context(taskScope: LiveTaskContextScope)
+context(_: LiveTaskContextScope)
 public fun <R> TaskRunnable<R>.runBlocking(
     context: CoroutineContext = EmptyCoroutineContext,
-): R = taskScope.runBlockingTask(
+): R = runBlockingTask(
     task = task,
     context = context,
     block = block,
@@ -187,14 +189,14 @@ public fun <R> TaskRunnable<R>.runBlocking(
  * @param task The task to run the coroutine as.
  * @param block The coroutine code.
  */
-context(taskScope: LiveTaskContextScope)
-public suspend fun CoroutineScope.launchTask(
+context(coroutineScope: CoroutineScope, taskScope: LiveTaskContextScope)
+public suspend fun launchTask(
     task: Task = JobTask.Launch,
     context: CoroutineContext = EmptyCoroutineContext,
     start: CoroutineStart = CoroutineStart.DEFAULT,
     block: TaskRunnableBlock<Unit>,
 ): Job {
-    val job = launch(context, start) {
+    val job = coroutineScope.launch(context, start) {
         LiveTaskContext().enter(
             parent = taskScope.taskContext,
             runnable = task.runnable(block),
@@ -210,8 +212,8 @@ public suspend fun CoroutineScope.launchTask(
  * @param name The name of the task to run the coroutine as.
  * @param block The coroutine code.
  */
-context(taskScope: LiveTaskContextScope)
-public suspend fun CoroutineScope.launchTask(
+context(_: CoroutineScope, _: LiveTaskContextScope)
+public suspend fun launchTask(
     name: String,
     context: CoroutineContext = EmptyCoroutineContext,
     start: CoroutineStart = CoroutineStart.DEFAULT,
@@ -228,11 +230,11 @@ public suspend fun CoroutineScope.launchTask(
  *
  * @param block The coroutine code.
  */
-context(_: LiveTaskContextScope, coroutineScope: CoroutineScope)
+context(_: CoroutineScope, _: LiveTaskContextScope)
 public suspend fun Task.launch(
     context: CoroutineContext = EmptyCoroutineContext,
     block: TaskRunnableBlock<Unit>,
-): Job = coroutineScope.launchTask(
+): Job = launchTask(
     task = this,
     context = context,
     block = block,
@@ -241,10 +243,10 @@ public suspend fun Task.launch(
 /**
  * Creates a coroutine task via [CoroutineScope.launch].
  */
-context(_: LiveTaskContextScope, coroutineScope: CoroutineScope)
+context(_: CoroutineScope, _: LiveTaskContextScope)
 public suspend fun TaskRunnable<Unit>.launch(
     context: CoroutineContext = EmptyCoroutineContext,
-): Job = coroutineScope.launchTask(
+): Job = launchTask(
     task = task,
     context = context,
     block = block,
@@ -256,14 +258,14 @@ public suspend fun TaskRunnable<Unit>.launch(
  * @param task The task to run the coroutine as.
  * @param block The coroutine code.
  */
-context(taskScope: LiveTaskContextScope)
-public suspend fun <R> CoroutineScope.asyncTask(
+context(coroutineScope: CoroutineScope, taskScope: LiveTaskContextScope)
+public suspend fun <R> asyncTask(
     task: Task = JobTask.Async,
     context: CoroutineContext = EmptyCoroutineContext,
     start: CoroutineStart = CoroutineStart.DEFAULT,
     block: TaskRunnableBlock<R>,
 ): Deferred<R> {
-    val deferred = async(context, start) {
+    val deferred = coroutineScope.async(context, start) {
         LiveTaskContext().enter(
             parent = taskScope.taskContext,
             runnable = task.runnable(block),
@@ -279,8 +281,8 @@ public suspend fun <R> CoroutineScope.asyncTask(
  * @param name The name of the task to run the coroutine as.
  * @param block The coroutine code.
  */
-context(taskScope: LiveTaskContextScope)
-public suspend fun <R> CoroutineScope.asyncTask(
+context(_: CoroutineScope, _: LiveTaskContextScope)
+public suspend fun <R> asyncTask(
     name: String,
     context: CoroutineContext = EmptyCoroutineContext,
     start: CoroutineStart = CoroutineStart.DEFAULT,
@@ -297,11 +299,11 @@ public suspend fun <R> CoroutineScope.asyncTask(
  *
  * @param block The coroutine code.
  */
-context(_: LiveTaskContextScope, coroutineScope: CoroutineScope)
+context(_: CoroutineScope, _: LiveTaskContextScope)
 public suspend fun <R> Task.async(
     context: CoroutineContext = EmptyCoroutineContext,
     block: TaskRunnableBlock<R>,
-): Deferred<R> = coroutineScope.asyncTask(
+): Deferred<R> = asyncTask(
     task = this,
     context = context,
     block = block,
@@ -310,10 +312,10 @@ public suspend fun <R> Task.async(
 /**
  * Creates a coroutine task via [CoroutineScope.async].
  */
-context(_: LiveTaskContextScope, coroutineScope: CoroutineScope)
+context(_: CoroutineScope, _: LiveTaskContextScope)
 public suspend fun <R> TaskRunnable<R>.async(
     context: CoroutineContext = EmptyCoroutineContext,
-): Deferred<R> = coroutineScope.asyncTask(
+): Deferred<R> = asyncTask(
     task = task,
     context = context,
     block = block,
