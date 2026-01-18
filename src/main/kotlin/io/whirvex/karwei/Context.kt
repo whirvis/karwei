@@ -329,6 +329,13 @@ internal constructor() : TaskContext {
         this.contextEntered = true
     }
 
+    private fun ensureLivingParent() {
+        if (parent?.isActive == false) {
+            val msg = "Cannot enter context with dead parent"
+            throw ConcurrentTaskException(task, msg)
+        }
+    }
+
     private fun enforceConcurrentBehavior() {
         if (allowConcurrentTasks) {
             return /* nothing to check for */
@@ -415,6 +422,7 @@ internal constructor() : TaskContext {
             this._events = events
             this._allowConcurrentTasks = allowConcurrentTasks
 
+            this.ensureLivingParent()
             this.enforceConcurrentBehavior()
             return this.start(runnable)
         } finally {
