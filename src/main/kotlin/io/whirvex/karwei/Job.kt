@@ -269,10 +269,12 @@ public suspend fun launchTask(
 context(_: CoroutineScope)
 public suspend fun Task.launch(
     context: CoroutineContext = EmptyCoroutineContext,
+    start: CoroutineStart = CoroutineStart.DEFAULT,
     block: TaskRunnableBlock<Unit>,
 ): Job = launchTask(
     task = this,
     context = context,
+    start = start,
     block = block,
 )
 
@@ -282,9 +284,11 @@ public suspend fun Task.launch(
 context(_: CoroutineScope)
 public suspend fun TaskRunnable<Unit>.launch(
     context: CoroutineContext = EmptyCoroutineContext,
+    start: CoroutineStart = CoroutineStart.DEFAULT,
 ): Job = launchTask(
     task = task,
     context = context,
+    start = start,
     block = block,
 )
 
@@ -335,10 +339,12 @@ public suspend fun <R> asyncTask(
 context(_: CoroutineScope)
 public suspend fun <R> Task.async(
     context: CoroutineContext = EmptyCoroutineContext,
+    start: CoroutineStart = CoroutineStart.DEFAULT,
     block: TaskRunnableBlock<R>,
 ): Deferred<R> = asyncTask(
     task = this,
     context = context,
+    start = start,
     block = block,
 )
 
@@ -348,8 +354,10 @@ public suspend fun <R> Task.async(
 context(_: CoroutineScope)
 public suspend fun <R> TaskRunnable<R>.async(
     context: CoroutineContext = EmptyCoroutineContext,
+    start: CoroutineStart = CoroutineStart.DEFAULT,
 ): Deferred<R> = asyncTask(
     task = task,
     context = context,
+    start = start,
     block = block,
 )
