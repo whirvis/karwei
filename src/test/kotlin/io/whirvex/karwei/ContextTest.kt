@@ -189,7 +189,7 @@ internal class ContextTest {
 
     @Test
     fun liveContextLevelIsZeroAfterCompletion() {
-        val contexts = mutableListOf<TaskContext>()
+        val contexts = mutableListOf<TaskContext<*>>()
         runBlockingTask {
             contexts += taskContext
             runBlockingTask {
@@ -239,7 +239,7 @@ internal class ContextTest {
 
     @Test
     fun liveContextIsFailedAfterException() {
-        lateinit var context: TaskContext
+        lateinit var context: TaskContext<*>
 
         @Suppress("AssignedValueIsNeverRead")
         try {
@@ -257,7 +257,7 @@ internal class ContextTest {
     @Test
     fun liveContextHasFailureCauseAfterException() {
         val exception = RuntimeException()
-        lateinit var context: TaskContext
+        lateinit var context: TaskContext<*>
 
         @Suppress("AssignedValueIsNeverRead")
         try {
@@ -352,7 +352,7 @@ internal class ContextTest {
 
     @Test
     fun liveContextThrowsOnSecondEntry() {
-        val context = LiveTaskContext()
+        val context = LiveTaskContext<Task>()
 
         assertDoesNotThrow {
             runBlocking {
@@ -493,7 +493,7 @@ internal class ContextTest {
 
     @Test
     fun liveTaskContextScopeUsesGivenContext() {
-        val taskContext = LiveTaskContext()
+        val taskContext = LiveTaskContext<Task>()
         val scope = LiveTaskContextScope(taskContext)
         assertSame(taskContext, scope.taskContext)
     }

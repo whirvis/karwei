@@ -28,6 +28,7 @@ import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 
 private val TEST_TASK = task(name = "test")
@@ -40,11 +41,6 @@ internal class TaskTest {
     }
 
     @Test
-    fun anonymousTaskUsesCorrectName() {
-        assertEquals("<anonymous task>", task().name)
-    }
-
-    @Test
     fun isAnonymousReturnsTrueForAnonymousTask() {
         assertTrue { task().isAnonymous() }
         assertFalse { task().isNotAnonymous() }
@@ -54,6 +50,38 @@ internal class TaskTest {
     fun isAnonymousReturnsFalseForNamedTask() {
         assertFalse { TEST_TASK.isAnonymous() }
         assertTrue { TEST_TASK.isNotAnonymous() }
+    }
+
+    @Test
+    fun isNamedReturnsTrueForNamedTask() {
+        assertTrue { TEST_TASK.isNamed() }
+        assertFalse { TEST_TASK.isNotNamed() }
+    }
+
+    @Test
+    fun isNamedReturnsFalseForUnnamedTask() {
+        assertFalse { task().isNamed() }
+        assertTrue { task().isNotNamed() }
+    }
+
+    @Test
+    fun getNameOrElseReturnsNameForNamedTask() {
+        assertEquals("test", TEST_TASK.getNameOrElse())
+    }
+
+    @Test
+    fun getNameOrElseReturnsFallbackForUnnamedTask() {
+        assertEquals("fallback", task().getNameOrElse("fallback"))
+    }
+
+    @Test
+    fun nameReturnsNameForNamedTask() {
+        assertEquals("test", TEST_TASK.nameOrNull)
+    }
+
+    @Test
+    fun nameOrNullReturnsNullForUnnamedTask() {
+        assertNull(task().nameOrNull)
     }
 
     @Test

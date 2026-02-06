@@ -42,7 +42,7 @@ internal class EventTest {
         val task = context.task
 
         val level = TaskLogLevel.Trace
-        val result = Object()
+        val result = Any()
         val cause = Throwable()
 
         val events = listOf(

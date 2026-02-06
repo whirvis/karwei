@@ -125,7 +125,7 @@ public interface TaskLogger {
      *
      * @see TaskContext.logger
      */
-    public val context: TaskContext
+    public val context: TaskContext<*>
 
     /**
      * Emits a log message from the [context].
@@ -166,7 +166,7 @@ internal constructor(
  */
 public class LiveTaskLogger
 internal constructor(
-    override val context: LiveTaskContext,
+    override val context: LiveTaskContext<*>,
 ) : TaskLogger {
 
     override suspend fun log(level: TaskLogLevel, message: () -> Any) {

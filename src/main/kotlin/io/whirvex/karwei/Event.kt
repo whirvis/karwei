@@ -34,13 +34,13 @@ import java.time.LocalDateTime
  */
 public sealed class TaskEvent(
     public val task: Task,
-    context: LiveTaskContext,
+    context: LiveTaskContext<*>,
 ) {
 
     /**
      * The context the event occurred in.
      */
-    public val context: TaskContext = context.toStatic()
+    public val context: TaskContext<*> = context.toStatic()
 
     /**
      * The exact time at which this event occurred
@@ -59,7 +59,7 @@ public sealed class TaskEvent(
 public class TaskBeginEvent
 internal constructor(
     task: Task,
-    context: LiveTaskContext,
+    context: LiveTaskContext<*>,
 ) : TaskEvent(task, context)
 
 /**
@@ -73,7 +73,7 @@ internal constructor(
 public class TaskLogEvent
 internal constructor(
     task: Task,
-    context: LiveTaskContext,
+    context: LiveTaskContext<*>,
     public val level: TaskLogLevel,
     public val message: () -> Any,
 ) : TaskEvent(task, context)
@@ -88,7 +88,7 @@ internal constructor(
 public class TaskFinishEvent
 internal constructor(
     task: Task,
-    context: LiveTaskContext,
+    context: LiveTaskContext<*>,
     internal val result: Any?,
 ) : TaskEvent(task, context)
 
@@ -102,6 +102,6 @@ internal constructor(
 public class TaskFailEvent
 internal constructor(
     task: Task,
-    context: LiveTaskContext,
+    context: LiveTaskContext<*>,
     public val cause: Throwable,
 ) : TaskEvent(task, context)

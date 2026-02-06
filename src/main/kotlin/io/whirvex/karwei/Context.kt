@@ -44,9 +44,9 @@ public class ConcurrentTaskException(
     override val message: String?
 ) : TaskException(task)
 
-private fun TaskContext.getLevel(): Int {
+private fun TaskContext<*>.getLevel(): Int {
     var level = 0
-    var current: TaskContext? = parent
+    var current: TaskContext<*>? = parent
     while (current != null) {
         level += 1
         current = current.parent
@@ -54,21 +54,21 @@ private fun TaskContext.getLevel(): Int {
     return level
 }
 
-private fun List<TaskContext>.names() = joinToString {
-    "\"${it.task.name}\""
+private fun List<TaskContext<*>>.names() = joinToString {
+    "\"${it.task.getNameOrElse()}\""
 }
 
 /**
  * Persistent context for a [Task].
  */
-public interface TaskContext {
+public interface TaskContext<T : Task> {
 
     /**
      * Returns the task being run in this context.
      *
      * @throws IllegalStateException If no task is currently running.
      */
-    public val task: Task
+    public val task: T
 
     /**
      * Returns the parent of the current task.
@@ -79,7 +79,7 @@ public interface TaskContext {
      * `null` once the task transitions to its final state and all its
      * [children] have completed.
      */
-    public val parent: TaskContext?
+    public val parent: TaskContext<*>?
 
     /**
      * Returns the level this task is at in the hierarchy.
@@ -133,7 +133,7 @@ public interface TaskContext {
      * A task becomes a child of this task when it is constructed with this
      * task in its [TaskContext] or an explicit parent parameter.
      */
-    public val children: List<TaskContext>
+    public val children: List<TaskContext<*>>
 
     /**
      * The logger for this task.
@@ -142,12 +142,12 @@ public interface TaskContext {
 
 }
 
-private fun LiveTaskContext.getRoot(): LiveTaskContext {
+private fun LiveTaskContext<*>.getRoot(): LiveTaskContext<*> {
     return parent?.getRoot() ?: this
 }
 
 @VisibleForTesting
-internal fun LiveTaskContext.toStatic(): StaticTaskContext {
+internal fun LiveTaskContext<*>.toStatic(): StaticTaskContext {
     var captured: StaticTaskContext? = null
 
     /*
@@ -180,8 +180,8 @@ internal fun LiveTaskContext.toStatic(): StaticTaskContext {
     return captured
 }
 
-private fun List<LiveTaskContext>.toStatic(
-    onConvert: (LiveTaskContext, StaticTaskContext) -> Unit,
+private fun List<LiveTaskContext<*>>.toStatic(
+    onConvert: (LiveTaskContext<*>, StaticTaskContext) -> Unit,
 ) = map { context ->
     StaticTaskContext(context, onConvert)
 }
@@ -202,7 +202,7 @@ private constructor(
     override val isFailed: Boolean,
     override val failureCause: Throwable?,
     override val children: List<StaticTaskContext>,
-) : TaskContext {
+) : TaskContext<Task> {
 
     /*
      * This is set by parent contexts *after* initial construction.
@@ -223,8 +223,8 @@ private constructor(
         get() = _logger!!
 
     internal constructor(
-        context: LiveTaskContext,
-        onConvert: (LiveTaskContext, StaticTaskContext) -> Unit,
+        context: LiveTaskContext<*>,
+        onConvert: (LiveTaskContext<*>, StaticTaskContext) -> Unit,
     ) : this(
         task = context.task,
         level = context.level,
@@ -244,26 +244,26 @@ private constructor(
 /**
  * Current context for a [Task].
  */
-public class LiveTaskContext
-internal constructor() : TaskContext {
+public class LiveTaskContext<T : Task>
+internal constructor() : TaskContext<T> {
 
     private val contextLock = ReentrantLock()
     private var contextEntered = false
 
     private var _events: ProducerScope<TaskEvent>? = null
 
-    private var _task: Task? = null
-    private var _parent: LiveTaskContext? = null
+    private var _task: T? = null
+    private var _parent: LiveTaskContext<*>? = null
     private var _isActive: Boolean = false
     private var _isCompleted: Boolean = false
     private var _failureCause: Throwable? = null
-    private val _children = mutableListOf<LiveTaskContext>()
+    private val _children = mutableListOf<LiveTaskContext<*>>()
     private val _logger = LiveTaskLogger(this)
 
     internal val events: ProducerScope<TaskEvent>?
         get() = this._events
 
-    override val task: Task
+    override val task: T
         get() {
             val field = this._task
             if (field == null) {
@@ -273,7 +273,7 @@ internal constructor() : TaskContext {
             return field
         }
 
-    override val parent: LiveTaskContext?
+    override val parent: LiveTaskContext<*>?
         get() = this._parent
 
     override val level: Int
@@ -291,7 +291,7 @@ internal constructor() : TaskContext {
     override val failureCause: Throwable?
         get() = this._failureCause
 
-    override val children: List<LiveTaskContext>
+    override val children: List<LiveTaskContext<*>>
         get() = this._children.toList()
 
     override val logger: LiveTaskLogger
@@ -335,7 +335,7 @@ internal constructor() : TaskContext {
     }
 
     private suspend fun <R> start(
-        runnable: TaskRunnable<R>,
+        runnable: TaskRunnable<T, R>,
     ): R {
         fun setup() {
             this._isActive = true
@@ -396,9 +396,9 @@ internal constructor() : TaskContext {
     }
 
     private suspend fun <R> enter(
-        parent: LiveTaskContext?,
+        parent: LiveTaskContext<*>?,
         events: ProducerScope<TaskEvent>?,
-        runnable: TaskRunnable<R>,
+        runnable: TaskRunnable<T, R>,
     ): R {
         contextLock.lock()
         try {
@@ -417,7 +417,7 @@ internal constructor() : TaskContext {
 
     internal suspend fun <R> enter(
         events: ProducerScope<TaskEvent>?,
-        runnable: TaskRunnable<R>,
+        runnable: TaskRunnable<T, R>,
     ): R = enter(
         parent = null,
         events = events,
@@ -425,8 +425,8 @@ internal constructor() : TaskContext {
     )
 
     internal suspend fun <R> enter(
-        parent: LiveTaskContext,
-        runnable: TaskRunnable<R>,
+        parent: LiveTaskContext<*>,
+        runnable: TaskRunnable<T, R>,
     ): R = enter(
         parent = parent,
         events = parent.events,
@@ -435,11 +435,11 @@ internal constructor() : TaskContext {
 
 }
 
-private val TaskContext.taskNameOrDead
-    get() = if (isActive) task.name else "<dead task>"
+private val TaskContext<*>.taskNameOrDead
+    get() = if (isActive) task.getNameOrElse() else "<dead task>"
 
 internal class LiveTaskContextElement(
-    val taskContext: LiveTaskContext,
+    val taskContext: LiveTaskContext<*>,
 ) : AbstractCoroutineContextElement(key = LiveTaskContextElement) {
 
     companion object Key :
@@ -455,12 +455,12 @@ internal class LiveTaskContextElement(
  *
  * @see LiveTaskContextScope
  */
-public interface TaskContextScope {
+public interface TaskContextScope<T : Task> {
 
     /**
      * The context of this scope.
      */
-    public val taskContext: TaskContext
+    public val taskContext: TaskContext<T>
 
     /**
      * Shorthand for `taskContext.logger`.
@@ -477,7 +477,7 @@ public interface TaskContextScope {
  * an extension on [LiveTaskContextScope] and inherits its context to
  * automatically propagate its elements and cancellation.
  */
-public class LiveTaskContextScope
+public class LiveTaskContextScope<T : Task>
 internal constructor(
-    override val taskContext: LiveTaskContext
-) : TaskContextScope
+    override val taskContext: LiveTaskContext<T>
+) : TaskContextScope<T>

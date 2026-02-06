@@ -28,39 +28,36 @@ import kotlinx.coroutines.CoroutineScope
 /**
  * A task that can be accomplished.
  *
- * Tasks, by default, have no data other than their name. Users are
- * supposed to create their own type that implements this interface
- * and has the necessary data.
+ * Tasks, by default, have no data. Users are expected to create their own
+ * type that implements this interface and has the necessary data.
  */
-public interface Task {
+public interface Task
 
-    /**
-     * The name of the task.
-     */
+/**
+ * A task which also has a name.
+ */
+public interface NamedTask : Task {
     public val name: String
-
 }
 
 /**
  * A task with no data other than its name.
  */
-public class NamedTask
+internal class BareNamedTask
 internal constructor(
     override val name: String,
-) : Task
+) : NamedTask
 
 /**
  * An anonymous task with no data.
  */
 public class AnonymousTask
-internal constructor() : Task {
-    override val name: String = "<anonymous task>"
-}
+internal constructor() : Task
 
 /**
  * Creates a task with the given name.
  */
-public fun task(name: String): Task = NamedTask(name)
+public fun task(name: String): NamedTask = BareNamedTask(name)
 
 /**
  * Creates an anonymous tasks with no name.
@@ -82,11 +79,39 @@ public fun Task.isAnonymous(): Boolean = this is AnonymousTask
 public fun Task.isNotAnonymous(): Boolean = !this.isAnonymous()
 
 /**
+ * Returns if this task has a name.
+ *
+ * This is a shorthand for `is NamedTask`.
+ */
+public fun Task.isNamed(): Boolean = this is NamedTask
+
+/**
+ * Returns if this task does **not** have a name.
+ *
+ * This is a shorthand for `!isNamed()`.
+ */
+public fun Task.isNotNamed(): Boolean = !this.isNamed()
+
+/**
+ * Returns the name of this task or the given fallback value if this
+ * task is not named.
+ */
+public fun Task.getNameOrElse(
+    fallback: String = "<unnamed task>",
+): String = if (this is NamedTask) name else fallback
+
+/**
+ * Returns the name of this task or `null` if this task is not named.
+ */
+public val Task.nameOrNull: String?
+    get() = if (this is NamedTask) name else null
+
+/**
  * The function signature for a runnable task.
  */
-public typealias TaskRunnableBlock<R> =
+public typealias TaskRunnableBlock<T, R> =
         suspend context(CoroutineScope)
-        LiveTaskContextScope.() -> R
+        LiveTaskContextScope<T>.() -> R
 
 /**
  * A task that can be executed.
@@ -95,10 +120,10 @@ public typealias TaskRunnableBlock<R> =
  * @property block The code to execute.
  */
 @ConsistentCopyVisibility
-public data class TaskRunnable<out R>
+public data class TaskRunnable<T : Task, out R>
 internal constructor(
-    public val task: Task,
-    public val block: TaskRunnableBlock<R>,
+    public val task: T,
+    public val block: TaskRunnableBlock<T, R>,
 )
 
 /**
@@ -107,9 +132,9 @@ internal constructor(
  * @param block The code to execute.
  * @return A runnable task.
  */
-public fun <R> Task.runnable(
-    block: TaskRunnableBlock<R>,
-): TaskRunnable<R> = TaskRunnable(
+public fun <T : Task, R> T.runnable(
+    block: TaskRunnableBlock<T, R>,
+): TaskRunnable<T, R> = TaskRunnable(
     task = this,
     block = block,
 )
@@ -122,9 +147,9 @@ public fun <R> Task.runnable(
  * @param block The code to execute.
  * @return A runnable task.
  */
-public operator fun <R> Task.invoke(
-    block: TaskRunnableBlock<R>,
-): TaskRunnable<R> = runnable(block)
+public operator fun <T : Task, R> T.invoke(
+    block: TaskRunnableBlock<T, R>,
+): TaskRunnable<T, R> = runnable(block)
 
 /**
  * Shorthand to make an executable task with the given name.
@@ -135,9 +160,9 @@ public operator fun <R> Task.invoke(
  */
 public fun <R> task(
     name: String,
-    block: TaskRunnableBlock<R>,
-): TaskRunnable<R> {
-    val task = NamedTask(name)
+    block: TaskRunnableBlock<NamedTask, R>,
+): TaskRunnable<NamedTask, R> {
+    val task = BareNamedTask(name)
     val section = TaskRunnable(task, block)
     return section
 }
@@ -149,8 +174,8 @@ public fun <R> task(
  * @return A runnable task with the given name.
  */
 public fun <R> task(
-    block: TaskRunnableBlock<R>,
-): TaskRunnable<R> {
+    block: TaskRunnableBlock<Task, R>,
+): TaskRunnable<Task, R> {
     val task = AnonymousTask()
     val section = TaskRunnable(task, block)
     return section

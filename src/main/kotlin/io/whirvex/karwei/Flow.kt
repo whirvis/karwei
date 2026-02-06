@@ -77,13 +77,13 @@ public class TaskFlowResult<R : Any?> {
 
 }
 
-private fun <R> TaskRunnable<R>.baseTaskFlow(): Flow<TaskEvent> =
-    channelFlow {
-        LiveTaskContext().enter(
-            events = this@channelFlow,
-            runnable = this@baseTaskFlow,
-        )
-    }
+private fun <T : Task, R> TaskRunnable<T, R>.baseTaskFlow():
+        Flow<TaskEvent> = channelFlow {
+    LiveTaskContext<T>().enter(
+        events = this@channelFlow,
+        runnable = this@baseTaskFlow,
+    )
+}
 
 /**
  * Creates an instance of a _cold_ [Flow] that emits events related
@@ -97,7 +97,7 @@ private fun <R> TaskRunnable<R>.baseTaskFlow(): Flow<TaskEvent> =
  * @throws IllegalArgumentException If [result] already has a value.
  */
 @Suppress("UNCHECKED_CAST")
-public fun <S : Any?, R : S> TaskRunnable<R>.taskFlow(
+public fun <T: Task, S : Any?, R : S> TaskRunnable<T, R>.taskFlow(
     result: TaskFlowResult<S>?,
 ): Flow<TaskEvent> {
     if (result?.computedResult == true) {
@@ -124,5 +124,5 @@ public fun <S : Any?, R : S> TaskRunnable<R>.taskFlow(
  * Like other cold flows, the runnable is called every time a terminal
  * operator is applied to the resulting flow.
  */
-public fun TaskRunnable<Unit>.taskFlow(): Flow<TaskEvent> =
-    baseTaskFlow()
+public fun <T : Task> TaskRunnable<T, Unit>.taskFlow():
+        Flow<TaskEvent> = baseTaskFlow()
