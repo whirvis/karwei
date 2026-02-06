@@ -10,7 +10,12 @@ plugins {
 }
 
 group = "io.whirvex"
-version = "2.0.0"
+version = "2.0.1"
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
 
 kotlin {
     jvmToolchain(jdkVersion = 21)
